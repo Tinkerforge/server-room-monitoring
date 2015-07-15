@@ -15,6 +15,7 @@ from tinkerforge.ip_connection import IPConnection
 from tinkerforge.ip_connection import Error
 from tinkerforge.brick_master import Master
 from tinkerforge.bricklet_ambient_light import AmbientLight
+from tinkerforge.bricklet_ambient_light_v2 import AmbientLightV2
 from tinkerforge.bricklet_temperature import Temperature
 
 class Xively:
@@ -82,8 +83,9 @@ class ServerRoomMonitoring:
     PORT = 4223
 
     ipcon = None
-    temp = None
     al = None
+    al_v2 = None
+    temp = None
 
     def __init__(self):
         self.xively = Xively()
@@ -116,6 +118,10 @@ class ServerRoomMonitoring:
         self.xively.put('AmbientLight', illuminance/10.0)
         log.info('Ambient Light ' + str(illuminance/10.0))
 
+    def cb_illuminance_v2(self, illuminance):
+        self.xively.put('AmbientLight', illuminance/100.0)
+        log.info('Ambient Light ' + str(illuminance/100.0))
+
     def cb_temperature(self, temperature):
         self.xively.put('Temperature', temperature/100.0)
         log.info('Temperature ' + str(temperature/100.0))
@@ -130,10 +136,20 @@ class ServerRoomMonitoring:
                     self.al.set_illuminance_callback_period(1000)
                     self.al.register_callback(self.al.CALLBACK_ILLUMINANCE,
                                               self.cb_illuminance)
-                    log.info('AmbientLight initialized')
+                    log.info('Ambient Light initialized')
                 except Error as e:
-                    log.error('AmbientLight init failed: ' + str(e.description))
+                    log.error('Ambient Light init failed: ' + str(e.description))
                     self.al = None
+            elif device_identifier == AmbientLightV2.DEVICE_IDENTIFIER:
+                try:
+                    self.al_v2 = AmbientLightV2(uid, self.ipcon)
+                    self.al_v2.set_illuminance_callback_period(1000)
+                    self.al_v2.register_callback(self.al_v2.CALLBACK_ILLUMINANCE,
+                                                 self.cb_illuminance_v2)
+                    log.info('Ambient Light 2.0 initialized')
+                except Error as e:
+                    log.error('Ambient Light 2.0 init failed: ' + str(e.description))
+                    self.al_v2 = None
             elif device_identifier == Temperature.DEVICE_IDENTIFIER:
                 try:
                     self.temp = Temperature(uid, self.ipcon)
