@@ -80,7 +80,7 @@ class CheckTFTemperature(object):
         val = self.read_sensor()
 
         if self.connected_type == TYPE_MOTION_DETECTOR:
-            if val == 0:
+            if val == 1:
                 print "motion detected"
                 return MOTION_DETECTED
             else:
