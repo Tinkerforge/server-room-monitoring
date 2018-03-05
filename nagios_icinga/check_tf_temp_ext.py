@@ -21,6 +21,7 @@ from tinkerforge.bricklet_temperature import Temperature
 from tinkerforge.bricklet_ptc import PTC
 from tinkerforge.bricklet_humidity import Humidity
 from tinkerforge.bricklet_motion_detector import MotionDetector
+from tinkerforge.bricklet_motion_detector_v2 import MotionDetectorV2
 from tinkerforge.bricklet_segment_display_4x7 import SegmentDisplay4x7
 import argparse
 import sys
@@ -54,6 +55,10 @@ class CheckTFTemperature(object):
             self.unit = '%RH'
         elif self.connected_type == TYPE_MOTION_DETECTOR:
             md = MotionDetector(uid, self.ipcon)
+
+            if md.get_identity().device_identifier == MotionDetectorV2.DEVICE_IDENTIFIER:
+                md = MotionDetectorV2(uid, self.ipcon)
+
             self.func = md.get_motion_detected
         elif self.connected_type == TYPE_SEGMENT_DISPLAY_4X7:
             display = SegmentDisplay4x7(uid, self.ipcon)
