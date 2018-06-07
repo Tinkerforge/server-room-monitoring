@@ -19,7 +19,9 @@ TYPE_SEGMENT_DISPLAY_4X7 = "segment_display_4x7"
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_temperature import Temperature
 from tinkerforge.bricklet_ptc import PTC
+from tinkerforge.bricklet_ptc_v2 import PTCV2
 from tinkerforge.bricklet_humidity import Humidity
+from tinkerforge.bricklet_humidity_v2 import HumidityV2
 from tinkerforge.bricklet_motion_detector import MotionDetector
 from tinkerforge.bricklet_motion_detector_v2 import MotionDetectorV2
 from tinkerforge.bricklet_segment_display_4x7 import SegmentDisplay4x7
@@ -33,6 +35,7 @@ class CheckTFTemperature(object):
         self.ipcon = IPConnection()
         self.name = 'unknown'
         self.unit = 'unknown'
+        self.is_humidity_v2 = False
 
     def connect(self, type, uid):
         self.ipcon.connect(self.host, self.port)
@@ -40,6 +43,10 @@ class CheckTFTemperature(object):
 
         if self.connected_type == TYPE_PTC:
             ptc = PTC(uid, self.ipcon)
+
+            if ptc.get_identity().device_identifier == PTCV2.DEVICE_IDENTIFIER:
+                ptc = PTCV2(uid, self.ipcon)
+
             self.func = ptc.get_temperature
             self.name = 'temperature'
             self.unit = '°C'
@@ -50,6 +57,13 @@ class CheckTFTemperature(object):
             self.unit = '°C'
         elif self.connected_type == TYPE_HUMIDITY:
             humidity = Humidity(uid, self.ipcon)
+
+            if humidity.get_identity().device_identifier == HumidityV2.DEVICE_IDENTIFIER:
+                humidity = HumidityV2(uid, self.ipcon)
+                self.is_humidity_v2 = True
+            else:
+                self.is_humidity_v2 = False
+
             self.func = humidity.get_humidity
             self.name = 'humidity'
             self.unit = '%RH'
@@ -75,7 +89,10 @@ class CheckTFTemperature(object):
 
     def read_sensor(self):
         if self.connected_type == TYPE_HUMIDITY:
-            return self.func()/10.0
+            if not self.self.is_humidity_v2:
+                return self.func()/10.0
+            else:
+                return self.func()/100.0
         elif self.connected_type == TYPE_MOTION_DETECTOR:
             return self.func()
         else: # Temperature, PTC

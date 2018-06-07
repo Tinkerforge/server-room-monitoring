@@ -14,6 +14,7 @@ TYPE_TEMPERATURE = "temp"
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_temperature import Temperature
 from tinkerforge.bricklet_ptc import PTC
+from tinkerforge.bricklet_ptc_v2 import PTCV2
 import argparse
 import sys
 
@@ -29,6 +30,10 @@ class CheckTFTemperature(object):
 
         if self.connected_type == TYPE_PTC:
             ptc = PTC(uid, self.ipcon)
+
+            if ptc.get_identity().device_identifier == PTCV2.DEVICE_IDENTIFIER:
+                ptc = PTCV2(uid, self.ipcon)
+
             self.func = ptc.get_temperature
         elif self.connected_type == TYPE_TEMPERATURE:
             temperature = Temperature(uid, self.ipcon)
